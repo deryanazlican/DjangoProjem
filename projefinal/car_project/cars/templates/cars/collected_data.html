@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yeni Çekilen Araç Listesi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Navbar Ayarları */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: linear-gradient(90deg, #6c63ff, #4b47b2);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 30px;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-family: 'Arial', sans-serif;
+        }
+
+        .navbar .logo {
+            font-size: 22px;
+            font-weight: bold;
+            position: absolute;
+            left: 30px;
+        }
+
+        .navbar ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+            padding: 0;
+            margin: 0;
+        }
+
+        .navbar ul li a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+
+        .navbar ul li a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .navbar ul li a.active {
+            background: #4b47b2;
+            font-weight: bold;
+        }
+
+
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: #f4f7fb;
+            color: #333;
+            display: flex;
+            min-height: 100vh;
+            padding: 0;
+            padding-top: 60px;
+            margin: 0;
+        }
+
+        /* Filtreleme Bölümü */
+        .filter-section {
+            width: 16.67%;
+            /* %16.67 genişlik (2/12) */
+            height: 100vh;
+            /* Ekranın tamamını kaplasın */
+            background-color: #fff;
+            padding: 30px;
+            border-right: 1px solid #ddd;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+
+        .filter-section h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        label {
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            transition: border-color 0.3s;
+        }
+
+        select:focus,
+        input:focus {
+            border-color: #6c63ff;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #6c63ff;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #5753d1;
+        }
+
+        /* Veri Tablosu Bölümü */
+        .table-section {
+            margin-left: 17.67%;
+            /* Filtreleme genişliği kadar kaydır */
+            width: 82.33%;
+            /* %83.33 genişlik (10/12) */
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            position: absolute;
+        }
+
+        .table-section h3 {
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #6c63ff;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Responsive Tasarım */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .filter-section {
+                position: static;
+                width: 100%;
+                height: auto;
+                border-right: none;
+                box-shadow: none;
+            }
+
+            .table-section {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">İkinci El Araç Listesi</div>
+        <ul>
+            <li><a href="http://127.0.0.1:8000/" class="active">Anasayfa</a></li>
+            <li><a href="{% url 'trend_analysis' %}">Trend Analizleri</a></li>
+            <li><a href="{% url 'predict_price' %}">Tahmin Et</a></li>
+        </ul>
+
+    </nav>
+
+    <div class="container">
+        <div class="filter-section">
+            <h3>Filtreleme</h3>
+            <form method="get">
+                <label>Marka:</label>
+                <select name="marka" id="marka" onchange="filterModels()">
+                    <option value="">Seçiniz</option>
+                    <option value="Alfa Romeo">Alfa Romeo</option>
+                    <option value="Audi">Audi</option>
+                    <option value="BMW">BMW</option>
+                    <option value="Chevrolet">Chevrolet</option>
+                    <option value="Citroen">Citroen</option>
+                    <option value="Dacia">Dacia</option>
+                    <option value="DS Automobiles">DS Automobiles</option>
+                    <option value="Fiat">Fiat</option>
+                    <option value="Ford">Ford</option>
+                    <option value="Geely">Geely</option>
+                    <option value="Honda">Honda</option>
+                    <option value="Hyundai">Hyundai</option>
+                    <option value="Jaguar">Jaguar</option>
+                    <option value="Kia">Kia</option>
+                    <option value="Lada">Lada</option>
+                    <option value="Mazda">Mazda</option>
+                    <option value="Mercedes - Benz">Mercedes - Benz</option>
+                    <option value="MINI">MINI</option>
+                    <option value="Mitsubishi">Mitsubishi</option>
+                    <option value="Nissan">Nissan</option>
+                    <option value="Opel">Opel</option>
+                    <option value="Peugeot">Peugeot</option>
+                    <option value="Porsche">Porsche</option>
+                    <option value="Renault">Renault</option>
+                    <option value="Seat">Seat</option>
+                    <option value="Skoda">Skoda</option>
+                    <option value="Suzuki">Suzuki</option>
+                    <option value="Tata">Tata</option>
+                    <option value="Tofaş">Tofaş</option>
+                    <option value="Toyota">Toyota</option>
+                    <option value="Volkswagen">Volkswagen</option>
+                    <option value="Volvo">Volvo</option>
+                </select>
+
+                <label>Model:</label>
+                <select name="model" id="model" disabled>
+                    <option value="">Önce Marka Seçiniz</option>
+                </select>
+
+                <label>Yıl:</label>
+                <select name="yil" id="yil" onchange="filterModels()">
+                    <option value="">Seçiniz</option>
+                    <option value="2000once">2000 Öncesi</option>
+                    <option value="2000_2005arasi">2000-2005 arası</option>
+                    <option value="2005_2010arasi">2005-2010 arası</option>
+                    <option value="2010_2020arasi">2010-2020 arası</option>
+                    <option value="2020sonra">2020 Sonrası</option>
+                </select>
+
+                <label>KM:</label>
+                <input type="text" name="km_min" id="km_min" placeholder="En Az">
+                <input type="text" name="km_max" id="km_max" placeholder="En Çok">
+
+                <label>Fiyat:</label>
+                <input type="text" name="fiyat_min" placeholder="En Az">
+                <input type="text" name="fiyat_max" placeholder="En Çok">
+
+                <label>Kaza Raporu:</label>
+                <select name="kaza_raporu" id="kaza_raporu" onchange="filterModels()">
+                    <option value="">Seçiniz</option>
+                    <option value="Tamamı orjinal">Tamamı orjinal</option>
+                    <option value="Tamamı boyalı">Tamamı boyalı</option>
+                    <option value="Evet">Evet</option>
+                    <option value="Hayır">Hayır</option>
+                </select>
+
+                <label>Renk:</label>
+                <select name="renk" id="renk" onchange="filterModels()">
+                    <option value="">Seçiniz</option>
+                    <option value="Kırmızı">Kırmızı</option>
+                    <option value="Mavi">Mavi</option>
+                    <option value="Siyah">Siyah</option>
+                    <option value="Beyaz">Beyaz</option>
+                    <option value="Gri">Gri</option>
+                    <option value="Yeşil">Yeşil</option>
+                    <option value="Altın">Altın</option>
+                    <option value="Bej">Bej</option>
+                    <option value="Bordo">Bordo</option>
+                    <option value="Cabrio">Cabrio</option>
+                    <option value="Diğer">Diğer</option>
+                    <option value="Coupe">Coupe</option>
+                    <option value="Füme">Füme</option>
+                    <option value="Lacivert">Lacivert</option>
+                    <option value="Kahverengi">Kahverengi</option>
+                    <option value="Sarı">Sarı</option>
+                    <option value="Mor">Mor</option>
+                    <option value="Turkuaz">Turkuaz</option>
+                    <option value="Turuncu">Turuncu</option>
+                    <option value="Şampanya">Şampanya</option>
+                </select>
+
+                <label>Yakıt Türü:</label>
+                <select name="yakit_turu" id="yakit_turu" onchange="filterModels()">
+                    <option value="">Seçiniz</option>
+                    <option value="Benzin">Benzin</option>
+                    <option value="Dizel">Dizel</option>
+                    <option value="LPG & Benzin">LPG & Benzin</option>
+                </select>
+
+                <label>Vites Türü:</label>
+                <select name="vites_turu" id="vites_turu" onchange="filterModels()">
+                    <option value="">Seçiniz</option>
+                    <option value="Düz">Düz</option>
+                    <option value="Otomatik">Otomatik</option>
+                    <option value="Manuel">Manuel</option>
+                    <option value="Elektrik">Elektrik</option>
+                    <option value="Yarı Otomatik">Yarı Otomatik</option>
+                </select>
+
+                <label>Araç Durumu:</label>
+                <select name="arac_durumu" id="arac_durumu" onchange="filterModels()">
+                    <option value="">Seçiniz</option>
+                    <option value="İkinci El">İkinci El</option>
+                    <option value="Yurtdışından İthal Sıfır">Yurtdışından İthal Sıfır</option>
+                </select>
+
+                <label>Takas Durumu:</label>
+                <select name="takas_durumu" id="takas_durumu" onchange="filterModels()">
+                    <option value="">Seçiniz</option>
+                    <option value="Sahibinden">Sahibinden</option>
+                    <option value="Takasa Uygun">Takasa Uygun</option>
+                    <option value="Takasa Uygun Değil">Takasa Uygun Değil</option>
+                    <option value="Evet">Evet</option>
+                    <option value="Hayır">Hayır</option>
+                </select>
+
+                <label>Çekiş:</label>
+                <select name="cekis" id="cekis" onchange="filterModels()">
+                    <option value="">Seçiniz</option>
+                    <option value="Önden Çekiş">Önden Çekiş</option>
+                    <option value="Arkadan İtiş">Arkadan İtiş</option>
+                    <option value="4WD (Sürekli)">4WD (Sürekli)</option>
+                </select>
+
+                <label>Motor Hacmi:</label>
+                <select name="motor_hacmi" id="motor_hacmi" onchange="filterModels()">
+                    <option value="">Seçiniz</option>
+                    <option value="0-500">0 - 500 cc</option>
+                    <option value="501-1000">501 - 1000 cc</option>
+                    <option value="1001-1500">1001 - 1500 cc</option>
+                    <option value="1501-2000">1501 - 2000 cc</option>
+                </select>
+
+                <label>Motor Gücü:</label>
+                <select name="motor_gucu" id="motor_gucu" onchange="filterModels()">
+                    <option value="">Seçiniz</option>
+                    <option value="0-200">0 - 200 HP</option>
+                    <option value="201-400">201 - 400 HP</option>
+                    <option value="401-600">401 - 600 HP</option>
+                    <option value="601-800">601 - 800 HP</option>
+                    <option value="801-1000">801 - 1000 HP</option>
+                    <option value="1001+">1001 HP ve üstü</option>
+                </select>
+
+                <button type="submit">Filtrele</button>
+
+            </form>
+        </div>
+
+        <div class="table-section">
+            <h3>Yeni Çekilen Araç Listesi</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Marka</th>
+                        <th>Model</th>
+                        <th>Yıl</th>
+                        <th>Km</th>
+                        <th>Fiyat</th>
+                        <th>Şehir</th>
+                        <th>Kaza Raporu</th>
+                        <th>Renk</th>
+                        <th>Yakıt Türü</th>
+                        <th>Vites Türü</th>
+                        <th>Arac Durumu</th>
+                        <th>Takas Durumu</th>
+                        <th>Çekiş</th>
+                        <th>Motor Hacmi</th>
+                        <th>Motor Gücü</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr>
+                        <td>{{ row.marka }}</td>
+                        <td>{{ row.model }}</td>
+                        <td>{{ row.yil }}</td>
+                        <td>{{ row.km }}</td>
+                        <td>{{ row.fiyat }}</td>
+                        <td>{{ row.sehir }}</td>
+                        <td>{{ row.kaza_raporu }}</td>
+                        <td>{{ row.renk }}</td>
+                        <td>{{ row.yakit_turu }}</td>
+                        <td>{{ row.vites_turu }}</td>
+                        <td>{{ row.arac_durumu }}</td>
+                        <td>{{ row.takas_durumu }}</td>
+                        <td>{{ row.cekis }}</td>
+                        <td>{{ row.motor_hacmi }}</td>
+                        <td>{{ row.motor_gucu }}</td>
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <script>
+            function filterModels() {
+                var marka = document.getElementById('marka').value;
+                var modelSelect = document.getElementById('model');
+    
+                // Model listesini temizle
+                modelSelect.innerHTML = '<option value="">Önce Marka Seçiniz</option>';
+    
+                if (marka) {
+                    // Marka seçildiyse, get-models API'yi çağırarak modelleri al
+                    fetch(`/get-models/?marka=${marka}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Gelen model verilerini listeye ekle
+                            data.models.forEach(model => {
+                                var option = document.createElement('option');
+                                option.value = model;
+                                option.textContent = model;
+                                modelSelect.appendChild(option);
+                            });
+                            modelSelect.disabled = false; // Model seçimini aktif et
+                        });
+                } else {
+                    modelSelect.disabled = true; // Marka seçilmemişse, model seçimini devre dışı bırak
+                }
+            }
+    
+        </script>
+</body>
+
+</html>
